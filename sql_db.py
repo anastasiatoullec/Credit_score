@@ -60,6 +60,6 @@ with engine.connect() as connection:
             transaction.commit()
 
 conn = engine.connect() #Instantiate the Connection class in a variable named conn
-stmt = text ( "SELECT Customer_ID FROM credit" ).limit(10)
-result = conn.execute(stmt)
-result.fetchall()
+
+joblib.dump(conn, './conn.pkl')
+
