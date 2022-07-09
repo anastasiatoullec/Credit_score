@@ -39,12 +39,9 @@ credit= Table(
 )
 meta.create_all(engine)
 
+df = joblib.load('./df.pkl')#file with clean data
+values = list(zip(*map(df.get, df)))
 
-
-values = joblib.load('./df.pkl')#file with clean data
-
-
-#Need transformed values!!!
 with engine.connect() as connection:
     with connection.begin() as transaction:
         try:
@@ -63,3 +60,6 @@ with engine.connect() as connection:
             transaction.commit()
 
 conn = engine.connect() #Instantiate the Connection class in a variable named conn
+stmt = text ( "SELECT Customer_ID FROM credit" ).limit(10)
+result = conn.execute(stmt)
+result.fetchall()
