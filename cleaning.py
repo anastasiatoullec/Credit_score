@@ -84,7 +84,18 @@ df['Monthly_Balance'] = df['Monthly_Balance'].apply(lambda x: x.replace("_", "")
 df['Monthly_Balance'] = df['Monthly_Balance'].astype(float)  #nok trasforme '236.64268203272135' -> 236.64268203272135
 
 
-print(df)
+#print(df)
+#Create a primary key for future credit table
+df['ID_Credit']= [i for i in range(38971)]
 
 
-joblib.dump(df, './df.pkl')
+df_customer = df[['ID', 'Customer_ID', 'Name','Age','SSN','Occupation','Annual_Income','Monthly_Inhand_Salary']]
+df_credit = df[['ID_Credit','ID','Num_Bank_Accounts', 'Interest_Rate','Num_of_Loan','Type_of_Loan','Delay_from_due_date','Num_of_Delayed_Payment',
+'Changed_Credit_Limit', 'Num_Credit_Inquiries', 'Credit_Mix', 'Outstanding_Debt', 'Credit_Utilization_Ratio', 'Payment_of_Min_Amount',
+'Total_EMI_per_month', 'Amount_invested_monthly', 'Payment_Behaviour', 'Monthly_Balance', 'Credit_History_Age_Years','Credit_History_Age_Months']]
+
+
+
+joblib.dump(df_customer, './df_customer.pkl')
+joblib.dump(df_credit, './df_credit.pkl')
+
