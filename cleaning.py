@@ -6,8 +6,8 @@ df = pd.read_csv(filepath_or_buffer = 'test.csv',
                            header = 0)
 
 #Change missing Names to MrX
-df['Name'] = df['Name'].fillna('MrX')
-
+#df['Name'] = df['Name'].fillna('MrX')
+df=df.dropna(subset=['Name'])
 #Replace "_", "", then transform data into integer and chose age between 0 -110 years old
 df["Age"] = df["Age"].apply(lambda x: x.replace("_", ""))
 df["Age"] = df["Age"].astype(int)
@@ -86,16 +86,20 @@ df['Monthly_Balance'] = df['Monthly_Balance'].astype(float)  #nok trasforme '236
 
 #print(df)
 #Create a primary key for future credit table
-df['ID_Credit']= [i for i in range(38971)]
+#df['ID_Credit']= [i for i in range(38971)]
+df['ID_Credit']= [i for i in range(35023)]
 
 
-df_customer = df[['ID', 'Customer_ID', 'Name','Age','SSN','Occupation','Annual_Income','Monthly_Inhand_Salary']]
+#df_customer = df[['Customer_ID', 'Name','SSN','Occupation','Annual_Income','Monthly_Inhand_Salary']]
+df_customer = df[['Customer_ID', 'Name','SSN','Occupation']]
+df_customer = df_customer.drop_duplicates()
+df_income = df[['ID', 'Customer_ID','Annual_Income','Monthly_Inhand_Salary','Month']]
 df_credit = df[['ID_Credit','ID','Num_Bank_Accounts', 'Interest_Rate','Num_of_Loan','Type_of_Loan','Delay_from_due_date','Num_of_Delayed_Payment',
 'Changed_Credit_Limit', 'Num_Credit_Inquiries', 'Credit_Mix', 'Outstanding_Debt', 'Credit_Utilization_Ratio', 'Payment_of_Min_Amount',
 'Total_EMI_per_month', 'Amount_invested_monthly', 'Payment_Behaviour', 'Monthly_Balance', 'Credit_History_Age_Years','Credit_History_Age_Months']]
 
-
+print(df_credit.head(10))
 
 joblib.dump(df_customer, './df_customer.pkl')
 joblib.dump(df_credit, './df_credit.pkl')
-
+joblib.dump(df_income,'./df_income.pkl')
