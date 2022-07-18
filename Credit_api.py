@@ -1,8 +1,7 @@
 #pip3 install fastapi uvicorn
 #pip install passlib[bcrypt]
-#uvicorn credit_api:api --reload
+#uvicorn Credit_api:api --reload
 #http://127.0.0.1:8000/docs ou http://localhost:8000/docs
-
 import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -32,12 +31,28 @@ class Credit(BaseModel):
     customer_id: str 
     num_bank_account: int 
     interest_rate:int
+    num_of_loan:int
+    type_of_loan:str
+    delay_from_due_date: int
+    num_of_delayed_payment: int
+    changed_credit_limit: float
+    num_credit_inquiries: float
+    credit_mix: str
+    outstanding_debt: float
+    credit_utilization_ratio: float
+    payment_of_min_amount: str
+    total_emi_per_month: float
+    amount_invested_monthly: float
+    payment_behaviour: str
+    monthly_balance: float
+    credit_history_age_years: int
+    credit_history_age_months: int
 
 class Income(BaseModel):
     income_id:str
     customer_id: str
     annual_income: int
-    monthly__salary: int
+    monthly_salary: int
     month: str
 
 api = FastAPI(
@@ -45,17 +60,17 @@ api = FastAPI(
     description="Over the years, the global finance company has collected basic bank details and gathered a lot of credit-related information."
      "This Api represents an intelligent system to segregate the people into credit score brackets to reduce the manual efforts."
      "API allows to request database of the global finance company.",
-    version="1.0.0", openapi_tags=[
-        {
-        'name': 'Welcome',
-        'description': 'This function returns greetings'
-    },
-    {   'name': 'First test request' },
-])
+    version="1.0.0")
+    
+@api.get("/welcome", tags=['Welcome'])
+def welcome():
+    """Welcome to our page, we are glad to see you!
+    """
+    return {'Hello, Bonjour, Hola, Zdravstvuyte, Nǐn hǎo, Salve, Konnichiwa, Guten Tag, Olá, Anyoung haseyo, Asalaam alaikum, Goddag'}
 
 
-@api.get('/customers')
-async def get_users(): 
+@api.get('/customers',tags=['General credit information'])
+async def get_customers(): 
     with engine.connect() as connection:
         results = connection.execute('SELECT * FROM customer limit 10;')
 
@@ -69,8 +84,8 @@ async def get_users():
 
     return results
 
-@api.get('/incomes')
-async def get_users(): 
+@api.get('/incomes',tags=['General credit information'])
+async def get_incomes(): 
     with engine.connect() as connection:
         results = connection.execute('SELECT * FROM income limit 10;')
 
@@ -79,15 +94,15 @@ async def get_users():
             income_id=i[0],
             customer_id=i[1],
             annual_income=i[2],
-            monthly__salary=i[3],
+            monthly_salary=i[3],
             month=i[4]
            
             ) for i in results.fetchall()]
 
     return results
         
-@api.get('/credits')
-async def get_users(): 
+@api.get('/credits',tags=['General credit information'])
+async def get_credits(): 
     with engine.connect() as connection:
         results = connection.execute('SELECT * FROM credit limit 10;')
 
@@ -97,30 +112,90 @@ async def get_users():
             credit_id=i[0],
             customer_id=i[1],
             num_bank_account=i[2],
-            interest_rate=i[3]
-         
-            #autres champs à ajouter
-            
+            interest_rate=i[3],
+            num_of_loan=i[4],
+            type_of_loan=i[5],
+            delay_from_due_date=i[6],
+            num_of_delayed_payment=i[7],
+            changed_credit_limit=i[8],
+            num_credit_inquiries=i[9],
+            credit_mix=i[10],
+            outstanding_debt=i[11],
+            credit_utilization_ratio=i[12],
+            payment_of_min_amount=i[13],
+            total_emi_per_month=i[14],
+            amount_invested_monthly=i[15],
+            payment_behaviour=i[16],
+            monthly_balance=i[17],
+            credit_history_age_years=i[18],
+            credit_history_age_months=i[19]
+                        
             ) for i in results.fetchall()]
 
     return results  
-    
 
-
-@api.get("/welcome", tags=['Welcome'])
-def welcome():
-    """Welcome to our page, we are glad to see you!
+@api.post("/fill_customer",tags=['New Customer'])
+def fill_Customer(cust:Customer):
     """
-    return {'Hello, Bonjour, Hola, Zdravstvuyte, Nǐn hǎo, Salve, Konnichiwa, Guten Tag, Olá, Anyoung haseyo, Asalaam alaikum, Goddag'}
-
-'''
-@api.get("/first", tags=['First test request'])
-def first_function():
-    """This function returns 2 lines of our model!
+    Here we can add a information for a new customer
     """
-    df = joblib.load('./df.pkl')#file with clean data
-    test_df = df.head(2)
+    features = [[
+    cust.customer_id,
+    cust.name,
+    cust.ssn,
+    cust.occupation
+    ]]
+    #function to send a new information
     return {
-        "Credit score dataframe":test_df.to_json(orient='records')
+        "New customer":features
     }
-'''
+
+@api.post("/fill_income",tags=['New Customer'])
+def fill_Income(inc:Income):
+    """
+    Here we can add a information of income for a new customer
+    """
+    features = [[
+    inc.income_id,
+    inc.customer_id,
+    inc.annual_income,
+    inc.monthly_salary,
+    inc.month
+    ]]
+    #function to send a new information
+    return {
+        "New income for a customer":features
+    }
+
+@api.post("/fill_credit",tags=['New Customer'])
+def fill_Credit(crd:Credit):
+    """
+    Here we can add a credit information for a new customer
+    """
+    features = [[
+    crd.credit_id,
+    crd.customer_id,
+    crd.num_bank_account,
+    crd.interest_rate,
+    crd.num_of_loan,
+    crd.type_of_loan,
+    crd.delay_from_due_date,
+    crd.num_of_delayed_payment,
+    crd.changed_credit_limit,
+    crd.num_credit_inquiries,
+    crd.credit_mix,
+    crd.outstanding_debt,
+    crd.credit_utilization_ratio,
+    crd.payment_of_min_amount,
+    crd.total_emi_per_month,
+    crd.amount_invested_monthly,
+    crd.payment_behaviour,
+    crd.monthly_balance,
+    crd.credit_history_age_years,
+    crd.credit_history_age_months
+    ]]
+    #function to send a new information
+    return {
+        "New credit information":features
+    }
+
