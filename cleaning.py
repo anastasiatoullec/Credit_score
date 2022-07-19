@@ -94,11 +94,10 @@ df['ID_Credit']= [i for i in range(35023)]
 df_customer = df[['Customer_ID', 'Name','SSN','Occupation']]
 df_customer = df_customer.drop_duplicates()
 df_income = df[['ID', 'Customer_ID','Annual_Income','Monthly_Inhand_Salary','Month']]
-df_credit = df[['ID_Credit','ID','Num_Bank_Accounts', 'Interest_Rate','Num_of_Loan','Type_of_Loan','Delay_from_due_date','Num_of_Delayed_Payment',
+df_credit = df[['ID_Credit','Customer_ID','Num_Bank_Accounts', 'Interest_Rate','Num_of_Loan','Type_of_Loan','Delay_from_due_date','Num_of_Delayed_Payment',
 'Changed_Credit_Limit', 'Num_Credit_Inquiries', 'Credit_Mix', 'Outstanding_Debt', 'Credit_Utilization_Ratio', 'Payment_of_Min_Amount',
 'Total_EMI_per_month', 'Amount_invested_monthly', 'Payment_Behaviour', 'Monthly_Balance', 'Credit_History_Age_Years','Credit_History_Age_Months']]
 
-print(df_credit.head(10))
 
 joblib.dump(df_customer, './df_customer.pkl')
 joblib.dump(df_credit, './df_credit.pkl')
