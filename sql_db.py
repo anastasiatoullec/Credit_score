@@ -6,6 +6,13 @@ import joblib
 
 engine = create_engine("sqlite:///credit_customer.db",connect_args={"check_same_thread": False})
 
+sql1 = text('DROP TABLE IF EXISTS customer;')
+result = engine.execute(sql1)
+sql2 = text('DROP TABLE IF EXISTS income;')
+result = engine.execute(sql2)
+sql3 = text('DROP TABLE IF EXISTS credit;')
+result = engine.execute(sql3)
+
 meta = MetaData()
 
 customer= Table(
