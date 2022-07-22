@@ -199,3 +199,82 @@ def fill_Credit(crd:Credit):
         "New credit information":features
     }
 
+
+
+@api.get('/max_income_occupation',tags=['Requests'])
+async def max_income_occupation():
+    """
+    Find customers with maximum annual income and show their occupation
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT occupation, Max(annual_income) as MaxIncome 
+    FROM customer INNER JOIN income ON customer.customer_id = income.customer_id  
+    GROUP BY occupation ORDER BY MaxIncome DESC LIMIT 10"""
+   #sqlite_select_query = """SELECT occupation, Max(annual_income) as MaxIncome FROM(customer INNER JOIN income ON customer.customer_id = income.customer_id ) GROUP BY occupation ORDER BY MaxIncome DESC LIMIT 10"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"Occupation and Annual income in euros" : records }
+
+@api.get('/min_income_occupation',tags=['Requests'])
+async def min_income_occupation():
+    """
+    Find customers with minimum annual income and show their occupation
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT occupation, Min(annual_income) as MinIncome 
+    FROM customer INNER JOIN income ON customer.customer_id = income.customer_id  
+    GROUP BY occupation ORDER BY MinIncome DESC LIMIT 10"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"Occupation and Annual income in euros" : records }
+
+@api.get('/avg_income_occupation',tags=['Requests'])
+async def avg_income_occupation():
+    """
+    Find customers with average annual income and show their occupation
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT occupation, AVG(annual_income) as AVGIncome 
+    FROM customer INNER JOIN income ON customer.customer_id = income.customer_id  
+    GROUP BY occupation ORDER BY AVGIncome DESC LIMIT 10"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"Occupation and Annual income in euros" : records }
+
+@api.get('/occupations',tags=['Requests'])
+async def occupations():
+    """
+    Show all occupations 
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """SELECT Occupation, COUNT(*) FROM customer GROUP BY Occupation"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return records
+
+@api.get('/type_of_loan_Scientist',tags=['Requests'])
+async def type_of_loan_Scientist():
+    """
+    Find occupations by type of loan 
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT Type_of_Loan, COUNT(*)
+    FROM customer INNER JOIN credit ON customer.customer_id = credit.customer_id  
+    WHERE Occupation='Scientist'  GROUP BY Occupation LIMIT 20"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"The most frequent type of loan for scientists" : records }
