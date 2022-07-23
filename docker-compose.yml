@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  api:
+    image: anastasiatoullec/image_credit:latest
+    container_name: credit_api_container
+    networks:
+      - net
+    ports:
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: host
+networks:
+  net:
