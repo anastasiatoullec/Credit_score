@@ -3,7 +3,7 @@
 #uvicorn Credit_api:api --reload
 #http://127.0.0.1:8000/docs ou http://localhost:8000/docs
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import joblib
 import pandas as pd
@@ -11,6 +11,8 @@ import numpy as np
 import json
 from sqlalchemy import  create_engine
 import  sqlite3
+from sql_db import insert_data
+from typing import Union, List
 
 
 database_name = 'credit_customer.db'
@@ -21,11 +23,6 @@ connection_url = 'sqlite:///{database}'.format(database=database_name)
 
 engine = create_engine(connection_url)
 
-class Customer(BaseModel):
-    customer_id: str
-    name: str 
-    ssn: str 
-    occupation: str
 
 class Credit(BaseModel):
     credit_id: int
@@ -56,6 +53,13 @@ class Income(BaseModel):
     monthly_salary: int
     month: str
 
+class Customer(BaseModel):
+    customer_id: str
+    name: str 
+    ssn: str 
+    occupation: str
+   # incomes: Union[List[Income], None] = None
+
 api = FastAPI(
     title="Credit score classification API",
     description="Over the years, the global finance company has collected basic bank details and gathered a lot of credit-related information."
@@ -70,22 +74,24 @@ def welcome():
     return {'Hello, Bonjour, Hola, Zdravstvuyte, Nǐn hǎo, Salve, Konnichiwa, Guten Tag, Olá, Anyoung haseyo, Asalaam alaikum, Goddag'}
 
 
-@api.get('/customers',tags=['General credit information'])
+@api.get('/customers',tags=['first 10 customers'])
 async def get_customers(): 
     with engine.connect() as connection:
         results = connection.execute('SELECT * FROM customer limit 10;')
-
+       
         results = [
         Customer(
             customer_id=i[0],
             name=i[1],
             ssn=i[2],
             occupation=i[3]
+
             ) for i in results.fetchall()]
 
     return results
 
-@api.get('/incomes',tags=['General credit information'])
+
+@api.get('/incomes',tags=['first 10 incomes'])
 async def get_incomes(): 
     with engine.connect() as connection:
         results = connection.execute('SELECT * FROM income limit 10;')
@@ -102,7 +108,7 @@ async def get_incomes():
 
     return results
         
-@api.get('/credits',tags=['General credit information'])
+@api.get('/credits',tags=['first 10 credits'])
 async def get_credits(): 
     with engine.connect() as connection:
         results = connection.execute('SELECT * FROM credit limit 10;')
@@ -133,29 +139,122 @@ async def get_credits():
                         
             ) for i in results.fetchall()]
 
-    return results  
+    return results 
 
-@api.post("/fill_customer",tags=['New Customer'])
-def fill_Customer(cust:Customer):
+@api.get('/customer/{customer_id}',tags=['Customer'])
+async def get_customer(customer_id): 
+    with engine.connect() as connection:
+        results = connection.execute("SELECT * FROM customer WHERE Customer_ID='"+customer_id+"'")
+        if results:
+            results = [
+            Customer(
+                customer_id=i[0],
+                name=i[1],
+                ssn=i[2],
+                occupation=i[3]
+
+                ) for i in results.fetchall()]
+        else:
+            raise HTTPException(status_code=404, detail="customer not found")
+    return results
+
+@api.get('/incomes/{customer_id}',tags=['Incomes by customer'])
+async def get_incomes_by_customer(customer_id): 
+    with engine.connect() as connection:
+        results = connection.execute("SELECT i.* FROM income AS i JOIN customer AS c ON i.Customer_ID = c.Customer_ID WHERE c.Customer_ID = '"+customer_id+"'")
+        if results:
+            results = [
+            Income(
+                income_id=i[0],
+                customer_id=i[1],
+                annual_income=i[2],
+                monthly_salary=i[3],
+                month=i[4]
+
+                ) for i in results.fetchall()]
+        else:
+            raise HTTPException(status_code=404, detail="customer not found")
+    return results
+
+@api.get('/credits/{customer_id}',tags=['Credits by customer'])
+async def get_credits_by_customer(customer_id): 
+    with engine.connect() as connection:
+        results = connection.execute("SELECT cr.* FROM credit AS cr JOIN customer AS c ON cr.Customer_ID = c.Customer_ID WHERE c.Customer_ID = '"+customer_id+"'")
+        if results:
+            results = [
+            Credit(
+                credit_id=i[0],
+                customer_id=i[1],
+                num_bank_account=i[2],
+                interest_rate=i[3],
+                num_of_loan=i[4],
+                type_of_loan=i[5],
+                delay_from_due_date=i[6],
+                num_of_delayed_payment=i[7],
+                changed_credit_limit=i[8],
+                num_credit_inquiries=i[9],
+                credit_mix=i[10],
+                outstanding_debt=i[11],
+                credit_utilization_ratio=i[12],
+                payment_of_min_amount=i[13],
+                total_emi_per_month=i[14],
+                amount_invested_monthly=i[15],
+                payment_behaviour=i[16],
+                monthly_balance=i[17],
+                credit_history_age_years=i[18],
+                credit_history_age_months=i[19])
+                for i in results.fetchall()]
+        else:
+            raise HTTPException(status_code=404, detail="customer not found")
+    return results
+ 
+
+@api.post("/customer",tags=['Create or update Customer'])
+async def fill_Customer(cust:Customer):
     """
     Here we can add a information for a new customer
     """
-    features = [[
-    cust.customer_id,
-    cust.name,
-    cust.ssn,
-    cust.occupation
-    ]]
-    #function to send a new information
-    #new_customer = pd.read_json(features)
-    #new_customer= np.asarray(json.loads(features.json()))
-    #joblib.dump(new_customer, './new_customer.pkl')
-    return {
-        "New customer":features
-    }
 
-@api.post("/fill_income",tags=['New Customer'])
-def fill_Income(inc:Income):
+    features = [[
+        cust.customer_id,
+        cust.name,
+        cust.ssn,
+        cust.occupation
+    
+    ]]
+
+    if cust.customer_id in get_all_customers_ids()[0]:
+        with engine.connect() as connection:
+            try:
+                results = connection.execute("UPDATE customer SET Name='"+cust.name+"', SSN='"+cust.ssn+"', Occupation='"+cust.occupation+"' WHERE Customer_ID = '"+cust.customer_id+"'")
+                features = [Customer(
+                customer_id=cust.customer_id,
+                name =cust.name,
+                ssn=cust.ssn,
+                occupation=cust.occupation
+    
+                )]
+                return {
+                "customer updated":features
+        } 
+            except:
+                raise  
+    else :
+        features = [Customer(
+                customer_id=cust.customer_id,
+                name =cust.name,
+                ssn=cust.ssn,
+                occupation=cust.occupation
+    
+                )]
+        insert_data(features, 'customer')
+        return {
+            "New customer":features
+        }
+
+
+@api.post("/income",tags=['New income'])
+async def fill_Income(inc:Income):
     """
     Here we can add a information of income for a new customer
     """
@@ -166,13 +265,25 @@ def fill_Income(inc:Income):
     inc.monthly_salary,
     inc.month
     ]]
-    #function to send a new information
-    return {
-        "New income for a customer":features
-    }
+    with engine.connect() as connection:
+        results = connection.execute("SELECT * FROM customer WHERE Customer_ID='"+inc.customer_id+"'")
+    
+        if results.fetchall():
+            insert_data(features, 'income')
+            features = [Income(
+                income_id = inc.income_id,
+                customer_id = inc.customer_id,
+                annual_income = inc.annual_income,
+                monthly_salary = inc.monthly_salary,
+                month =inc.month
+                )]
+            return features
+        else:
+            raise HTTPException(status_code=404, detail="customer not found")
+    
 
-@api.post("/fill_credit",tags=['New Customer'])
-def fill_Credit(crd:Credit):
+@api.post("/credit",tags=['New Credit'])
+async def fill_Credit(crd:Credit):
     """
     Here we can add a credit information for a new customer
     """
@@ -198,11 +309,15 @@ def fill_Credit(crd:Credit):
     crd.credit_history_age_years,
     crd.credit_history_age_months
     ]]
-    #function to send a new information
-    return {
-        "New credit information":features
-    }
-
+    with engine.connect() as connection:
+        results = connection.execute("SELECT * FROM customer WHERE Customer_ID='"+crd.customer_id+"'")
+        if results:
+            insert_data(features, 'credit')
+            return {
+                "New credit information":features
+            }
+        else:
+            raise HTTPException(status_code=404, detail="customer not found")
 
 
 @api.get('/max_income_occupation',tags=['Requests'])
@@ -413,3 +528,18 @@ async def monthly_balance():
     records = cursor.fetchall()
 
     return {"Biggest monthly balance for all lawyers": records }
+
+
+@api.get('/customers_ids',tags=['all customers ids'])
+def get_all_customers_ids():
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT Customer_ID FROM customer GROUP BY Customer_ID"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return records
+
+
+
