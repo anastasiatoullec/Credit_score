@@ -5,8 +5,9 @@
 import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
-#import joblib
-#import pandas as pd
+import joblib
+import pandas as pd
+import numpy as np
 import json
 from sqlalchemy import  create_engine
 import  sqlite3
@@ -146,6 +147,9 @@ def fill_Customer(cust:Customer):
     cust.occupation
     ]]
     #function to send a new information
+    #new_customer = pd.read_json(features)
+    #new_customer= np.asarray(json.loads(features.json()))
+    #joblib.dump(new_customer, './new_customer.pkl')
     return {
         "New customer":features
     }
@@ -277,4 +281,135 @@ async def type_of_loan_Scientist():
     cursor.execute(sqlite_select_query)
     records = cursor.fetchall()
 
-    return {"The most frequent type of loan for scientists" : records }
+    return {"Occupations by type of loan" : records }
+
+
+@api.get('/a_name_Scientist',tags=['Requests'])
+async def a_name_Scientist():
+    """
+    Find names that start from'Ana' with occupation Scientest and show there payment behaviour
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT customer.customer_id, Name, Payment_Behaviour 
+    FROM customer LEFT JOIN credit ON customer.customer_id = credit.customer_id  
+    WHERE Name LIKE 'Ana%' AND Occupation LIKE '%Scientist%'"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"Names that start from'Ana'" : records }
+
+@api.get('/smallest_interest_Rate',tags=['Requests'])
+async def smallest_interest_Rate():
+    """
+    Show who has the smallest interest rate
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT customer.customer_id, Name, Occupation, Min(Interest_Rate) as SmallRate
+    FROM customer INNER JOIN credit ON customer.customer_id = credit.customer_id  
+    GROUP BY Name, Occupation ORDER BY SmallRate  LIMIT 10"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"The smallest interest rate, %" : records }
+
+@api.get('/largest_interest_Rate',tags=['Requests'])
+async def largest_interest_Rate():
+    """
+    Show who has the largest interest rate
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT customer.customer_id, Name, Occupation, Max(Interest_Rate) as MAXRate
+    FROM customer INNER JOIN credit ON customer.customer_id = credit.customer_id  
+    GROUP BY Name, Occupation ORDER BY MAXRate DESC LIMIT 10"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"The largest interest rate" : records }
+
+@api.get('/scientists_payment_behaviour',tags=['Requests'])
+async def scientists_payment_behaviour():
+    """
+    Show payment behaviour of scientists
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT customer_id, Name, Occupation, Monthly_Inhand_Salary, Payment_Behaviour 
+    FROM customer NATURAL JOIN credit NATURAL JOIN income
+    WHERE Occupation LIKE '%Scientist%' ORDER BY Monthly_Inhand_Salary DESC LIMIT 30"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"Payment behaviour of scientists" : records }
+
+@api.get('/credit_history_age',tags=['Requests'])
+async def credit_history_age():
+    """
+    Show average credit history age years for each occupation
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT Occupation, AVG(Credit_History_Age_Years) as avg
+    FROM customer INNER JOIN credit ON customer.customer_id = credit.customer_id  
+    GROUP BY Occupation ORDER BY avg DESC"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"Average credit history age, years" : records }
+
+
+@api.get('/credit_utilization_ratio',tags=['Requests'])
+async def credit_utilization_ratio():
+    """
+    Show credit utilization ratio for name starts with Paul
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT Name, Credit_Utilization_Ratio
+    FROM customer INNER JOIN credit ON customer.customer_id = credit.customer_id  
+    WHERE Name LIKE 'Paul%' ORDER BY Credit_Utilization_Ratio DESC"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"Credit utilization ratio" : records }
+
+
+@api.get('/invested_maximum',tags=['Requests'])
+async def invested_maximum():
+    """
+    Show who  invested maximum by month
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT customer_id, Name, Occupation, Max(Amount_invested_monthly) as aim
+    FROM customer NATURAL JOIN credit NATURAL JOIN income  
+    ORDER BY aim DESC LIMIT 1"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"Who invested maximum by month": records }
+
+@api.get('/monthly_balance',tags=['Requests'])
+async def monthly_balance():
+    """
+    Show biggest monthly balance for lawyers
+    """
+    connection = sqlite3.connect('credit_customer.db')
+    cursor = connection.cursor()
+    sqlite_select_query = """
+    SELECT customer_id, Name, Occupation, Max(Monthly_Balance)
+    FROM customer NATURAL JOIN credit NATURAL JOIN income
+    WHERE Occupation LIKE '%Lawyer%' ORDER BY Monthly_Inhand_Salary DESC LIMIT 1"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+
+    return {"Biggest monthly balance for all lawyers": records }
