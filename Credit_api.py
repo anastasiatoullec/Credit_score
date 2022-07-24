@@ -74,7 +74,7 @@ def welcome():
     return {'Hello, Bonjour, Hola, Zdravstvuyte, Nǐn hǎo, Salve, Konnichiwa, Guten Tag, Olá, Anyoung haseyo, Asalaam alaikum, Goddag'}
 
 
-@api.get('/customers',tags=['first 10 customers'])
+@api.get('/customers',tags=['First 10 customers'])
 async def get_customers(): 
     with engine.connect() as connection:
         results = connection.execute('SELECT * FROM customer limit 10;')
@@ -91,7 +91,7 @@ async def get_customers():
     return results
 
 
-@api.get('/incomes',tags=['first 10 incomes'])
+@api.get('/incomes',tags=['First 10 incomes'])
 async def get_incomes(): 
     with engine.connect() as connection:
         results = connection.execute('SELECT * FROM income limit 10;')
@@ -108,7 +108,7 @@ async def get_incomes():
 
     return results
         
-@api.get('/credits',tags=['first 10 credits'])
+@api.get('/credits',tags=['First 10 credits'])
 async def get_credits(): 
     with engine.connect() as connection:
         results = connection.execute('SELECT * FROM credit limit 10;')
@@ -530,7 +530,7 @@ async def monthly_balance():
     return {"Biggest monthly balance for all lawyers": records }
 
 
-@api.get('/customers_ids',tags=['all customers ids'])
+@api.get('/customers_ids',tags=['All customers ids'])
 def get_all_customers_ids():
     connection = sqlite3.connect('credit_customer.db')
     cursor = connection.cursor()
