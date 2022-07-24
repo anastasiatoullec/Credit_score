@@ -1,4 +1,4 @@
-# Credit_score
+# Credit score
 L’objectif de ce projet est de choisir, mettre en place, et peupler une base de données à partir d’un jeu de données de l’open data, et d’implémenter une API permettant de requêter cette base de données.
 
 Nous avons choisi la base de donée "Credit score" sur le site kaggle: https://www.kaggle.com/datasets.
