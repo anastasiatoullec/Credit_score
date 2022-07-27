@@ -20,7 +20,7 @@ database_name = 'credit_customer.db'
 # recreating the URL connection
 connection_url = 'sqlite:///{database}'.format(database=database_name)
 
-engine = create_engine(connection_url)
+engine = create_engine(connection_url,connect_args={"check_same_thread": False})
 
 
 class Credit(BaseModel):
@@ -239,14 +239,20 @@ async def fill_Customer(cust:Customer):
             except:
                 raise  
     else :
-        features = [Customer(
+        features = [[cust.customer_id,
+                cust.name,
+                cust.ssn,
+                cust.occupation
+    
+        ]]
+        insert_data(features, 'customer')
+        Customer(
                 customer_id=cust.customer_id,
                 name =cust.name,
                 ssn=cust.ssn,
                 occupation=cust.occupation
     
-                )]
-        insert_data(features, 'customer')
+                )
         return {
             "New customer":features
         }
@@ -310,7 +316,7 @@ async def fill_Credit(crd:Credit):
     ]]
     with engine.connect() as connection:
         results = connection.execute("SELECT * FROM customer WHERE Customer_ID='"+crd.customer_id+"'")
-        if results:
+        if results.fetchall():
             insert_data(features, 'credit')
             return {
                 "New credit information":features
