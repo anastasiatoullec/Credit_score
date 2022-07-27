@@ -1,14 +1,26 @@
 version: "3.9"
 services:
+  db:
+    image: anastasiatoullec/image_db:latest
+    container_name: container_db
+    restart: always
+    networks:
+      - net
+    volumes:
+      - ./db:/db
+    ports:
+      - "8001:8001"
   api:
-    image: anastasiatoullec/image_credit:latest
+    image: anastasiatoullec/image_api_credit:latest
     container_name: credit_api_container
+    restart: always
     networks:
       - net
     ports:
-      - target: 8000
-        published: 8000
-        protocol: tcp
-        mode: host
+      - "8000:8000"
+    depends_on:
+      - "db"
+    volumes:
+      - .:/db
 networks:
   net:
