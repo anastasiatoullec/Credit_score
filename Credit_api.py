@@ -11,7 +11,6 @@ import numpy as np
 import json
 from sqlalchemy import  create_engine
 import  sqlite3
-from sql_db import insert_data
 from typing import Union, List
 
 
@@ -544,4 +543,20 @@ def get_all_customers_ids():
     return tableau
 
 
-
+def insert_data(values, table_name):
+    with engine.connect() as connection:
+        with connection.begin() as transaction:
+            try:
+                # We indicate the format of a tuple of this table
+                markers = ','.join('?' * len(values[0])) 
+                # We use the SQL language in text format where markers is the format of a tuple
+                ins = 'INSERT INTO {tablename} VALUES ({markers})'
+                # This particular format is specified using the format member function
+                ins = ins.format(tablename=table_name, markers=markers)
+                # Finally we can use the tuples created by executing the SQL command
+                connection.execute(ins, values)
+            except:
+                transaction.rollback()
+                raise
+            else:
+                transaction.commit()
