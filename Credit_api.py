@@ -223,7 +223,7 @@ async def fill_Customer(cust:Customer):
     
     ]]
 
-    if cust.customer_id in get_all_customers_ids()[0]:
+    if cust.customer_id in get_all_customers_ids():
         with engine.connect() as connection:
             try:
                 results = connection.execute("UPDATE customer SET Name='"+cust.name+"', SSN='"+cust.ssn+"', Occupation='"+cust.occupation+"' WHERE Customer_ID = '"+cust.customer_id+"'")
@@ -538,8 +538,10 @@ def get_all_customers_ids():
     SELECT Customer_ID FROM customer GROUP BY Customer_ID"""
     cursor.execute(sqlite_select_query)
     records = cursor.fetchall()
-
-    return records
+    tableau = []
+    for id in records:
+        tableau.append(id[0])
+    return tableau
 
 
 
