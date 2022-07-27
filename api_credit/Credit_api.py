@@ -11,7 +11,6 @@ import numpy as np
 import json
 from sqlalchemy import  create_engine
 import  sqlite3
-from sql_db import insert_data
 from typing import Union, List
 
 
@@ -21,7 +20,7 @@ database_name = 'credit_customer.db'
 # recreating the URL connection
 connection_url = 'sqlite:///{database}'.format(database=database_name)
 
-engine = create_engine(connection_url)
+engine = create_engine("sqlite:///credit_customer.db",connect_args={"check_same_thread": False})
 
 
 class Credit(BaseModel):
@@ -223,7 +222,7 @@ async def fill_Customer(cust:Customer):
     
     ]]
 
-    if cust.customer_id in get_all_customers_ids()[0]:
+    if cust.customer_id in get_all_customers_ids():
         with engine.connect() as connection:
             try:
                 results = connection.execute("UPDATE customer SET Name='"+cust.name+"', SSN='"+cust.ssn+"', Occupation='"+cust.occupation+"' WHERE Customer_ID = '"+cust.customer_id+"'")
@@ -538,8 +537,26 @@ def get_all_customers_ids():
     SELECT Customer_ID FROM customer GROUP BY Customer_ID"""
     cursor.execute(sqlite_select_query)
     records = cursor.fetchall()
+    tableau = []
+    for id in records:
+        tableau.append(id[0])
+    return tableau
 
-    return records
 
-
-
+def insert_data(values, table_name):
+    with engine.connect() as connection:
+        with connection.begin() as transaction:
+            try:
+                # We indicate the format of a tuple of this table
+                markers = ','.join('?' * len(values[0])) 
+                # We use the SQL language in text format where markers is the format of a tuple
+                ins = 'INSERT INTO {tablename} VALUES ({markers})'
+                # This particular format is specified using the format member function
+                ins = ins.format(tablename=table_name, markers=markers)
+                # Finally we can use the tuples created by executing the SQL command
+                connection.execute(ins, values)
+            except:
+                transaction.rollback()
+                raise
+            else:
+                transaction.commit()
