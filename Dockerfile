@@ -9,7 +9,8 @@ COPY df_customer.pkl /./df_customer.pkl
 COPY df_income.pkl /./df_income.pkl
 COPY sql_db.py /./sql_db.py
 COPY credit_customer.db /./credit_customer.db
-COPY Credit_api.py /./Credit_api.py
 WORKDIR /.
-EXPOSE 8000
-CMD uvicorn Credit_api:api --host 0.0.0.0
+EXPOSE 8001
+RUN python3 /./cleaning.py
+CMD python3 /./sql_db.py
+
